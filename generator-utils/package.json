@@ -1,0 +1,23 @@
+{
+  "name": "@onecx/generator-utils",
+  "version": "9.0.0-rc.2",
+  "license": "Apache-2.0",
+  "contributors": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onecx/onecx-nx-plugins.git"
+  },
+  "dependencies": {
+    "@nx/devkit": "^19.8.14",
+    "ejs": "^3.1.9",
+    "tslib": "^2.3.0",
+    "yaml": "^2.3.4"
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "types": "./src/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  }
+}

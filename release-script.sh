@@ -13,7 +13,8 @@ then
 fi
 
 # List of publishable packages in this repository
-packages=("nx-plugin" "create-workspace" "react-generator")
+# generator-shared must come first as the other generators depend on it
+packages=("generator-shared" "angular-generator" "create-workspace" "react-generator")
 
 for package in "${packages[@]}"; do
     packageJsonDataLib=$(cat $package/package.json)

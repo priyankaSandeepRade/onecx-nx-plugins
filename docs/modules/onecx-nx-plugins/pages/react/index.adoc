@@ -11,9 +11,9 @@ The current working directory must be the root of an existing OneCX React UI App
 
 == Available Generators
 
-* xref:./create-react-feature.adoc[Create a Feature Module (React)] +
+* xref:./create-react-feature.adoc[Create a React Feature Module] +
   Generates a feature entry page and registers feature-level routing.
-* xref:./create-react-details.adoc[Create a Detail Component (React)] +
+* xref:./create-react-details.adoc[Create a React Detail Component] +
   Generates details page, hook/store, and related UI components for a resource.
 * xref:./create-react-search.adoc[Create a React Search Page] +
   A data-driven search page with criteria, results table, header actions and API integration.

@@ -1,6 +1,6 @@
 import { Tree, names } from '@nx/devkit';
 
-import { updateYaml } from '../../shared/yaml';
+import { updateYaml } from '@onecx/generator-utils';
 import { GeneratorStep } from '../../shared/generator.utils';
 import { SearchGeneratorSchema } from '../schema';
 

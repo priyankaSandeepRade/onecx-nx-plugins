@@ -1,0 +1,52 @@
+{
+  "name": "generator-utils",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "generator-utils/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/generator-utils",
+        "main": "generator-utils/src/index.ts",
+        "tsConfig": "generator-utils/tsconfig.lib.json",
+        "assets": [
+          "generator-utils/*.md",
+          {
+            "input": "./generator-utils/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./generator-utils/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          }
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "generator-utils/jest.config.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs generator-utils {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "executor": "@onecx/release:update-build-publish",
+      "options": {
+        "libName": "generator-utils"
+      }
+    }
+  },
+  "tags": []
+}

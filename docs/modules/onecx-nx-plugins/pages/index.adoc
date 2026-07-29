@@ -14,6 +14,14 @@ The OneCX UI App Generator is a powerful tool that simplifies the development of
 
 In case you want to take part of the development of the generator or want to use it locally without installing it globally from npm, see the xref:generator/development.adoc[Development Guide] for instructions on how to get the generator and set up the development environment.
 
+[IMPORTANT]
+====
+*Package renamed in version 9.* +
+Starting with version *9.0.0-rc.2*, the Angular generator package has been renamed from `@onecx/nx-plugin` to `@onecx/angular-generator`. +
+Update your generator commands accordingly, e.g. use `nx generate @onecx/angular-generator:feature ...` instead of `nx generate @onecx/nx-plugin:feature ...`. +
+Older versions (v8 and below) continue to use the `@onecx/nx-plugin` package name.
+====
+
 
 == Prerequisites
 
@@ -147,7 +155,11 @@ image::generated_and_test.png[]
 
 In addition to the Angular generators, the OneCX App Generator provides generators for *React* UI applications. They follow the same iterative approach: generate a part, then adapt the places marked with *ACTION*.
 
+* xref:generator/create-react-feature.adoc[Create a Feature Module (React)] +
+  Generates a feature entry page and registers feature-level routing.
 * xref:generator/create-react-search.adoc[Create a React Search Page] +
   A data-driven search page with criteria, results table, header actions and API integration.
+* xref:generator/create-react-details.adoc[Create a Detail Component (React)] +
+  Generates details page, hook/store, and related UI components for a resource.
 * xref:generator/create-react-page.adoc[Create a React Page] +
   A minimal, ready-to-use page with header and content area.

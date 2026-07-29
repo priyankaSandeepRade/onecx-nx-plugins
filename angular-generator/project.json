@@ -1,0 +1,62 @@
+{
+  "name": "angular-generator",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "angular-generator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/angular-generator",
+        "main": "angular-generator/src/index.ts",
+        "tsConfig": "angular-generator/tsconfig.lib.json",
+        "assets": [
+          "angular-generator/*.md",
+          {
+            "input": "./angular-generator/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./angular-generator/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./angular-generator",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "./angular-generator",
+            "glob": "executors.json",
+            "output": "."
+          }
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "angular-generator/jest.config.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs angular-generator {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "executor": "@onecx/release:update-build-publish",
+      "options": {
+        "libName": "angular-generator"
+      }
+    }
+  },
+  "tags": []
+}

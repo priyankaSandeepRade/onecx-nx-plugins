@@ -60,9 +60,10 @@ module.exports = {
       '@semantic-release/git',
       {
         assets: [
-          `nx-plugin/package.json`,
+          `angular-generator/package.json`,
           `create-workspace/package.json`,
           `react-generator/package.json`,
+          `generator-utils/package.json`,
           `package.json`,
           `CHANGELOG.md`,
         ],

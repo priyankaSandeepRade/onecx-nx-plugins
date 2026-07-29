@@ -1,0 +1,43 @@
+import { Tree, joinPathFragments } from '@nx/devkit';
+
+import { GeneratorStep } from '../../shared/generator.utils';
+import { safeReplace } from '@onecx/generator-utils';
+import { SearchGeneratorSchema } from '../schema';
+
+export class AppModuleStep implements GeneratorStep<SearchGeneratorSchema> {
+  //@ts-eslint:ignore @typescript-eslint/no-unused-var
+  process(tree: Tree, _options: SearchGeneratorSchema): void {
+    const moduleFilePath = joinPathFragments('src/app/app.module.ts');
+    const find = [];
+    const replaceWith = [];
+    const moduleContent = tree.read(moduleFilePath, 'utf8');
+
+    if (!moduleContent.includes('providePortalDialogService } from')) {
+      find.push(`} from '@onecx/angular-accelerator'`);
+      replaceWith.push(
+        `, providePortalDialogService } from '@onecx/angular-accelerator'`
+      );
+    }
+
+    if (!moduleContent.includes('providePortalDialogService()')) {
+      find.push('providers: [');
+      replaceWith.push(`providers: [providePortalDialogService(), `);
+    }
+
+    if (find.length === 0) {
+      return;
+    }
+
+    safeReplace(
+      `Update AppModule to include providePortalDialogService in the providers array and extend import statements to include the service`,
+      moduleFilePath,
+      find,
+      replaceWith,
+      tree
+    );
+  }
+
+  getTitle(): string {
+    return 'Adapting App Module';
+  }
+}

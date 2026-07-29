@@ -1,25 +1,8 @@
 import { Tree } from '@nx/devkit';
 import ora = require('ora');
+import { GeneratorStepError } from '@onecx/generator-utils';
 
-interface GeneratorStepErrorParameters {
-  stopExecution: boolean;
-}
-
-const DEFAULT_ERROR_PARAMETERS: GeneratorStepErrorParameters = {
-  stopExecution: false,
-};
-
-export class GeneratorStepError extends Error {
-  errorParameters: GeneratorStepErrorParameters;
-
-  constructor(message: string, parameters?: GeneratorStepErrorParameters) {
-    super(message);
-    this.errorParameters = {
-      ...DEFAULT_ERROR_PARAMETERS,
-      ...parameters,
-    };
-  }
-}
+export { GeneratorStepError } from '@onecx/generator-utils';
 
 export interface GeneratorStep<T> {
   process(tree: Tree, options: T): void | Promise<void>;

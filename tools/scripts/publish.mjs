@@ -39,6 +39,25 @@ invariant(
   `Could not find project "${name}" in the workspace. Is the project.json configured correctly?`
 );
 
+// Collect the package names of all internal, publishable workspace libraries so
+// their versions can be kept in lockstep when one depends on another
+// (e.g. @onecx/angular-generator depends on @onecx/generator-utils).
+const internalPackageNames = new Set();
+for (const node of Object.values(graph.nodes)) {
+  if (!node.data?.targets?.publish || !node.data?.root) {
+    continue;
+  }
+  try {
+    const pkg = JSON.parse(
+      readFileSync(`${node.data.root}/package.json`).toString()
+    );
+    if (pkg.name) {
+      internalPackageNames.add(pkg.name);
+    }
+  } catch {
+  }
+}
+
 const outputPath = project.data?.targets?.build?.options?.outputPath;
 invariant(
   outputPath,
@@ -51,6 +70,24 @@ process.chdir(outputPath);
 try {
   const json = JSON.parse(readFileSync(`package.json`).toString());
   json.version = version;
+
+  // Keep internal workspace dependencies pinned to the version being published
+  for (const depType of [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies',
+  ]) {
+    if (!json[depType]) {
+      continue;
+    }
+    for (const dep of Object.keys(json[depType])) {
+      if (internalPackageNames.has(dep)) {
+        json[depType][dep] = version;
+      }
+    }
+  }
+
   writeFileSync(`package.json`, JSON.stringify(json, null, 2));
 } catch (e) {
   console.error(`Error reading package.json file from library build output.`);
