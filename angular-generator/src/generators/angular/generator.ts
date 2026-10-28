@@ -327,11 +327,14 @@ function adaptProjectConfiguration(
   const fileName = names(options.name).fileName;
   const outputPath = `./dist/${fileName}`;
 
-  // Build & serve are backed by the Rspack executors. The Rspack build runs in the
-  // default "standard" config mode, so the `rspack.config.js` file is the sole source
-  // of build inputs; the project.json options below only carry what the executors read
-  // directly (rspackConfig, tsConfig for type-checking, outputPath for the outfile and
-  // outputs, and index for the dev-server history fallback).
+  // Build & serve are backed by the Rspack executors. They run with
+  // `standardRspackConfigFunction: false` (the default), so Nx invokes the async
+  // `rspack.config.js` and uses its return value as the complete Rspack configuration. All
+  // Angular build inputs are therefore baked in inside `rspack.config.js` (via `createConfig`
+  // from `@nx/angular-rspack`, which installs the NgRspackPlugin), and the project.json
+  // options below only carry what the executors read directly (rspackConfig, tsConfig for
+  // type-checking, outputPath for the outfile and outputs, and index for the dev-server
+  // history fallback).
   config.targets['build'].executor = '@nx/rspack:rspack';
   config.targets['build'].options = {
     outputPath,

@@ -287,6 +287,12 @@ describe('nx-plugin', () => {
     expect(
       existsSync(join(projectDirectory, 'dist', projectName, 'remoteEntry.js'))
     ).toBe(true);
+    // The patch-loader rewrites primeng's `document.createElement` to the
+    // `document.createElementFromPrimeNg` hook; the generated app must ship a default for that
+    // hook (in its polyfills) or a standalone app crashes when served without a shell host.
+    expect(
+      readFileSync(join(projectDirectory, 'src', 'polyfills.ts'), 'utf-8')
+    ).toContain('createElementFromPrimeNg');
     // The extract-i18n target (kept on @angular/build:extract-i18n) must run and write a
     // translation bundle (`messages.xlf` at the app root by default).
     execSync(`nx run extract-i18n --skip-nx-cache`, tcOption);

@@ -153,21 +153,33 @@ describe('nx-plugin', () => {
     expect(rspackConfig).toContain('getOneCXRspackPatchLoaderRule');
 
     // Execute the generated patch-loader to prove it provides real protection (the
-    // "bug fixed" DoD): it must rewrite primeng's runtime DOM access. If the loader
-    // were a no-op the patched output would equal the raw source and these assertions
-    // would fail.
+    // "bug fixed" DoD): it must rewrite primeng's runtime DOM creation into a call to the
+    // `document.createElementFromPrimeNg` host hook, forwarding the ORIGINAL element
+    // arguments. It must not synthesize a context object (`{this, arguments}`) because primeng
+    // modules are strict-mode ESM, where a bare top-level `arguments` throws a ReferenceError
+    // and `this`/`arguments` inside a method capture the enclosing scope, not the
+    // `createElement` arguments. If the loader were a no-op the patched output would equal the
+    // raw source and these assertions would fail.
     const patchLoader = createRequire(
       join(projectDirectory, 'onecx-patch.loader.js')
     )(join(projectDirectory, 'onecx-patch.loader.js'));
     const primengSource =
       'const el = document.createElement("div"); Theme.setLoadedStyleName("x");';
     const patched = patchLoader(primengSource);
-    expect(patched).toContain(
-      'document.createElementFromPrimeNg({"this": this, "arguments": Array.from(arguments)},'
-    );
+    expect(patched).toContain('document.createElementFromPrimeNg("div")');
     expect(patched).toContain('(function(_){})');
     expect(patched).not.toContain('document.createElement("div")');
     expect(patched).not.toContain('Theme.setLoadedStyleName');
+    expect(patched).not.toContain('Array.from(arguments)');
+    // The rewritten modules call `document.createElementFromPrimeNg`, which must exist in a
+    // freshly generated app or serving it crashes (the host is not present when the app runs
+    // standalone). The generated polyfills ship a default that delegates back to the native
+    // `document.createElement`, so the hook resolves and a shell host can still override it.
+    const polyfills = readFileSync(
+      join(projectDirectory, 'src', 'polyfills.ts'),
+      'utf-8'
+    );
+    expect(polyfills).toContain('createElementFromPrimeNg');
   });
 
   beforeEach(() => {
