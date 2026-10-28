@@ -1,6 +1,6 @@
 import { execSync, ExecSyncOptionsWithBufferEncoding } from 'child_process';
 import { join, dirname } from 'path';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
 import * as os from 'os';
 
 const NON_INTERACTIVE_KEY = 'non-interactive';
@@ -100,6 +100,26 @@ describe('nx-plugin', () => {
       stdio: 'inherit',
       env: process.env,
     });
+  });
+
+  it('should generate a Rspack-based build/serve setup', () => {
+    // The generated app must build/serve with the Rspack executors instead of webpack.
+    expect(existsSync(join(projectDirectory, 'rspack.config.js'))).toBe(true);
+    expect(existsSync(join(projectDirectory, 'onecx-patch.loader.js'))).toBe(true);
+
+    const project = JSON.parse(
+      readFileSync(join(projectDirectory, 'project.json'), 'utf-8')
+    );
+    expect(project.targets.build.executor).toBe('@nx/rspack:rspack');
+    expect(project.targets.build.options.rspackConfig).toBe('rspack.config.js');
+    expect(project.targets.serve.executor).toBe('@nx/rspack:dev-server');
+    expect(project.targets.serve.options.buildTarget).toBe(
+      'test-project:build'
+    );
+    // The i18n extraction keeps its existing executor.
+    expect(project.targets['extract-i18n'].executor).toBe(
+      '@angular/build:extract-i18n'
+    );
   });
 
   beforeEach(() => {
