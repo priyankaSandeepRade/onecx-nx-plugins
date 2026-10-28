@@ -1,6 +1,6 @@
 import { execSync, ExecSyncOptionsWithBufferEncoding } from 'child_process';
 import { join, dirname } from 'path';
-import { existsSync, mkdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
 import * as os from 'os';
 
 const NON_INTERACTIVE_KEY = 'non-interactive';
@@ -283,6 +283,17 @@ describe('nx-plugin', () => {
     console.log('### ==> final build + test ###############################');
 
     execSync(`nx run build --skip-nx-cache`, tcOption);
+    // The Rspack production build must emit the Module Federation remote entry.
+    expect(
+      existsSync(join(projectDirectory, 'dist', projectName, 'remoteEntry.js'))
+    ).toBe(true);
+    // The extract-i18n target (kept on @angular/build:extract-i18n) must run and write a
+    // translation bundle (`messages.xlf` at the app root by default).
+    execSync(`nx run extract-i18n --skip-nx-cache`, tcOption);
+    const xlfFile = join(projectDirectory, 'messages.xlf');
+    expect(existsSync(xlfFile)).toBe(true);
+    expect(readFileSync(xlfFile, 'utf-8').length).toBeGreaterThan(0);
+
     execSync(`nx run test --skip-nx-cache`, tcOption);
   });
 });

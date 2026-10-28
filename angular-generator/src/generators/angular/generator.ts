@@ -164,6 +164,10 @@ export async function angularGenerator(
       '@swc-node/register': '~1.11.1',
       '@swc/core': '~1.15.8',
       '@angular/build': angularVersion,
+      // Peer of the @angular/build:extract-i18n executor used by the extract-i18n target;
+      // the builder exits early without it. Pinned to the Angular version like the other
+      // @angular/* packages.
+      '@angular/localize': angularVersion,
       '@angular-devkit/core': angularVersion,
       '@angular-devkit/schematics': angularVersion,
       '@angular-devkit/build-angular': angularVersion,

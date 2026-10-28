@@ -103,6 +103,27 @@ describe('nx-plugin', () => {
     });
   });
 
+  it('should build the remote and expose Module Federation', () => {
+    // The generated app builds with the Rspack build target and, because its rspack config
+    // wires the ModuleFederationPlugin, the production build must emit the remote entry.
+    const tcOption = { ...option, cwd: projectDirectory };
+    execSync(`nx run build --skip-nx-cache`, tcOption);
+    expect(
+      existsSync(join(projectDirectory, 'dist', projectName, 'remoteEntry.js'))
+    ).toBe(true);
+  });
+
+  it('should extract i18n messages', () => {
+    // The generated extract-i18n target (kept on @angular/build:extract-i18n) must run and
+    // write a translation bundle. The default output is `messages.xlf` at the app root.
+    const tcOption = { ...option, cwd: projectDirectory };
+    execSync(`nx run extract-i18n --skip-nx-cache`, tcOption);
+    const xlfFile = join(projectDirectory, 'messages.xlf');
+    expect(existsSync(xlfFile)).toBe(true);
+    // A successful run writes a non-empty serialized XLIFF bundle.
+    expect(readFileSync(xlfFile, 'utf-8').length).toBeGreaterThan(0);
+  });
+
   it('should generate a Rspack-based build/serve setup', () => {
     // The generated app must build/serve with the Rspack executors instead of webpack.
     expect(existsSync(join(projectDirectory, 'rspack.config.js'))).toBe(true);

@@ -79,6 +79,12 @@ module.exports = async (_config, args = {}) => {
         : [],
       optimization: isProduction,
       sourceMap: !isProduction,
+      // The license-webpack-plugin that @nx/angular-rspack enables by default
+      // (extractLicenses) crashes with `scandir ''` on the entry module (an empty
+      // directory) and aborts the production build before emitting any assets, including
+      // the Module Federation remoteEntry.js. The generated app does not rely on the
+      // extracted 3rdpartylicenses.txt file, so keep the license pass off.
+      extractLicenses: false,
       // Emit a flat dist/<name>/ layout (matching the npm build scripts and the Dockerfile).
       outputPath: { base: './dist/<%= fileName %>', browser: '.' },
       outputHashing: isProduction ? 'all' : 'none',
