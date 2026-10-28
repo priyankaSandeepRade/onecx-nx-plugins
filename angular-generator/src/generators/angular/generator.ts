@@ -157,6 +157,7 @@ export async function angularGenerator(
       '@nx/module-federation': '22.7.1',
       '@nx/rspack': '22.7.1',
       '@nx/angular-rspack': '22.7.1',
+      '@rspack/core': '1.6.8',
       '@openapitools/openapi-generator-cli': '^2.16.3',
       'ngx-translate-testing': '^7.0.0',
       '@schematics/angular': `~${angularVersion.substring(1)}`,

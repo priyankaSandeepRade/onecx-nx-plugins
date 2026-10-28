@@ -1,6 +1,7 @@
 import { execSync, ExecSyncOptionsWithBufferEncoding } from 'child_process';
 import { join, dirname } from 'path';
 import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
+import { createRequire } from 'module';
 import * as os from 'os';
 
 const NON_INTERACTIVE_KEY = 'non-interactive';
@@ -120,6 +121,32 @@ describe('nx-plugin', () => {
     expect(project.targets['extract-i18n'].executor).toBe(
       '@angular/build:extract-i18n'
     );
+
+    // The rspack config must wire the OneCX patch-loader into module.rules (not a no-op).
+    const rspackConfig = readFileSync(
+      join(projectDirectory, 'rspack.config.js'),
+      'utf-8'
+    );
+    expect(rspackConfig).toContain('@module-federation/enhanced/rspack');
+    expect(rspackConfig).toContain("require('./onecx-patch.loader.js')");
+    expect(rspackConfig).toContain('getOneCXRspackPatchLoaderRule');
+
+    // Execute the generated patch-loader to prove it provides real protection (the
+    // "bug fixed" DoD): it must rewrite primeng's runtime DOM access. If the loader
+    // were a no-op the patched output would equal the raw source and these assertions
+    // would fail.
+    const patchLoader = createRequire(
+      join(projectDirectory, 'onecx-patch.loader.js')
+    )(join(projectDirectory, 'onecx-patch.loader.js'));
+    const primengSource =
+      'const el = document.createElement("div"); Theme.setLoadedStyleName("x");';
+    const patched = patchLoader(primengSource);
+    expect(patched).toContain(
+      'document.createElementFromPrimeNg({"this": this, "arguments": Array.from(arguments)},'
+    );
+    expect(patched).toContain('(function(_){})');
+    expect(patched).not.toContain('document.createElement("div")');
+    expect(patched).not.toContain('Theme.setLoadedStyleName');
   });
 
   beforeEach(() => {
