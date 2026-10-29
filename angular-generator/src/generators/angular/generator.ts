@@ -155,13 +155,19 @@ export async function angularGenerator(
       '@nx/workspace': '22.7.1',
       '@nx/plugin': '22.7.1',
       '@nx/module-federation': '22.7.1',
+      '@nx/rspack': '22.7.1',
+      '@nx/angular-rspack': '22.7.1',
+      '@rspack/core': '1.6.8',
       '@openapitools/openapi-generator-cli': '^2.16.3',
       'ngx-translate-testing': '^7.0.0',
-      'modify-source-webpack-plugin': '^4.1.0',
       '@schematics/angular': `~${angularVersion.substring(1)}`,
       '@swc-node/register': '~1.11.1',
       '@swc/core': '~1.15.8',
       '@angular/build': angularVersion,
+      // Peer of the @angular/build:extract-i18n executor used by the extract-i18n target;
+      // the builder exits early without it. Pinned to the Angular version like the other
+      // @angular/* packages.
+      '@angular/localize': angularVersion,
       '@angular-devkit/core': angularVersion,
       '@angular-devkit/schematics': angularVersion,
       '@angular-devkit/build-angular': angularVersion,
@@ -193,6 +199,7 @@ export async function angularGenerator(
       'typescript-eslint': '^8.33.1',
       '@typescript-eslint/utils': '^8.33.1',
       webpack: '5.95.0',
+      'webpack-merge': '^6.0.1',
     }
   );
 
@@ -317,47 +324,23 @@ function adaptProjectConfiguration(
   options: AngularGeneratorSchema
 ) {
   const config = readProjectConfiguration(tree, options.name);
-  config.targets['serve'].executor = '@nx/angular:dev-server';
-  config.targets['serve'].options = {
-    ...(config.targets['serve'].options ?? {}),
-    disableHostCheck: true,
-    host: '0.0.0.0',
-    publicHost: 'http://localhost:4200',
-    proxyConfig: 'proxy.conf.js',
-    headers: {
-      "Allow": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-    }
-  };
-  config.targets['build'].executor = '@nx/angular:webpack-browser';
+  const fileName = names(options.name).fileName;
+  const outputPath = `./dist/${fileName}`;
+
+  // Build & serve are backed by the Rspack executors. They run with
+  // `standardRspackConfigFunction: false` (the default), so Nx invokes the async
+  // `rspack.config.js` and uses its return value as the complete Rspack configuration. All
+  // Angular build inputs are therefore baked in inside `rspack.config.js` (via `createConfig`
+  // from `@nx/angular-rspack`, which installs the NgRspackPlugin), and the project.json
+  // options below only carry what the executors read directly (rspackConfig, tsConfig for
+  // type-checking, outputPath for the outfile and outputs, and index for the dev-server
+  // history fallback).
+  config.targets['build'].executor = '@nx/rspack:rspack';
   config.targets['build'].options = {
-    ...(config.targets['build'].options ?? {}),
-    polyfills: 'src/polyfills.ts',
-    assets: [
-      ...(config.targets['build'].options.assets ?? []),
-      {
-        glob: '**/*',
-        input: './node_modules/@onecx/angular-accelerator/assets/',
-        output: '/onecx-angular-accelerator/assets/',
-      },
-      {
-        glob: '**/*',
-        input: './node_modules/@onecx/angular-utils/assets/',
-        output: '/onecx-angular-utils/assets/',
-      },
-    ],
-    styles: [
-      {
-        input: 'src/styles.scss',
-        bundleName: 'styles',
-        inject: true
-      }
-    ],
-    customWebpackConfig: {
-      path: 'webpack.config.js',
-    },
+    outputPath,
+    index: 'src/index.html',
+    tsConfig: 'tsconfig.app.json',
+    rspackConfig: 'rspack.config.js',
   };
   config.targets['build'].configurations = {
     ...(config.targets['build'].configurations ?? {}),
@@ -376,20 +359,25 @@ function adaptProjectConfiguration(
         },
       ],
       fileReplacements: [
-        ...(config.targets['build'].configurations.production
-          .fileReplacements ?? []),
         {
           replace: 'src/environments/environment.ts',
           with: 'src/environments/environment.prod.ts',
         },
       ],
-      customWebpackConfig: {
-        path: 'webpack.prod.config.js',
-      },
     },
   };
+
+  config.targets['serve'].executor = '@nx/rspack:dev-server';
+  config.targets['serve'].options = {
+    ...(config.targets['serve'].options ?? {}),
+    buildTarget: `${fileName}:build`,
+    host: '0.0.0.0',
+    publicHost: 'http://localhost:4200',
+    proxyConfig: 'proxy.conf.js',
+  };
+
   config.targets['extract-i18n'].executor = '@angular/build:extract-i18n';
-  updateProjectConfiguration(tree, names(options.name).fileName, config);
+  updateProjectConfiguration(tree, fileName, config);
 }
 
 function adaptJestConfig(tree: Tree) {
@@ -420,16 +408,6 @@ function adaptAngularPrefixConfig(tree: Tree) {
   updateJson(tree, 'project.json', (json) => {
     json.prefix = 'app';
     json.targets.test.options.coverage = true;
-    json.targets.build.options.main = json.targets.build.options.browser;
-    json.targets.build.options.assets = [
-      'src/favicon.ico',
-      'src/assets',
-      ...json.targets.build.options.assets,
-    ];
-    delete json.targets.build.options.browser;
-    json.targets.build.options.scripts = [
-      'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js',
-    ];
     return json;
   });
 }

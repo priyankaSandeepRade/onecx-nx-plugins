@@ -21,6 +21,11 @@ The generator supports three flavors of projects: *angular*, *with NgRx* and *wi
 It is **recommended to use the NgRx** flavor, because it leads to better structured projects and the state management is already in place. +
 The creation of a new workspace takes a while, as the generator sets up a complete Angular application with all necessary dependencies and configurations.
 
+[NOTE]
+====
+Generated UI Apps build and serve with Rspack (`@nx/rspack`) instead of Webpack, configured through the generated `rspack.config.js`.
+====
+
 .Generate the UI App with following commands
 [source,bash]
 ----
