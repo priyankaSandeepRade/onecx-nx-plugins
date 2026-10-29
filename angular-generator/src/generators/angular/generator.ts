@@ -198,7 +198,6 @@ export async function angularGenerator(
       typescript: '^5.9.0',
       'typescript-eslint': '^8.33.1',
       '@typescript-eslint/utils': '^8.33.1',
-      webpack: '5.95.0',
       'webpack-merge': '^6.0.1',
     }
   );
@@ -270,7 +269,7 @@ function addScriptsToPackageJson(tree: Tree, options: AngularGeneratorSchema) {
     pkgJson.scripts[
       'apigen'
     ] = `openapi-generator-cli generate -i src/assets/api/openapi-bff.yaml -c apigen.yaml -o src/app/shared/generated -g typescript-angular --type-mappings AnyType=object`;
-    pkgJson.scripts['start'] = 'nx serve --host 0.0.0.0 --disable-host-check';
+    pkgJson.scripts['start'] = 'nx serve --host 0.0.0.0';
     pkgJson.scripts['build'] = `nx build && cp dist/${options['name']}/styles.*.css dist/${options['name']}/styles.css`;
     pkgJson.scripts[
       'postbuild'
@@ -342,28 +341,20 @@ function adaptProjectConfiguration(
     tsConfig: 'tsconfig.app.json',
     rspackConfig: 'rspack.config.js',
   };
+  // With `standardRspackConfigFunction: false` the generated rspack.config.js discards the
+  // Nx-composed config and returns the `createConfig(...)` merge, so executor-level options
+  // like budgets/fileReplacements never take effect — the effective values live in
+  // rspack.config.js behind the `isProduction` split. Only `mode` is set here: the executor
+  // maps it to NODE_ENV, which drives that split.
   config.targets['build'].configurations = {
     ...(config.targets['build'].configurations ?? {}),
+    development: {
+      ...(config.targets['build'].configurations.development ?? {}),
+      mode: 'development',
+    },
     production: {
       ...(config.targets['build'].configurations.production ?? {}),
-      budgets: [
-        {
-          type: 'initial',
-          maximumWarning: '1mb',
-          maximumError: '2mb',
-        },
-        {
-          type: 'anyComponentStyle',
-          maximumWarning: '8kb',
-          maximumError: '10kb',
-        },
-      ],
-      fileReplacements: [
-        {
-          replace: 'src/environments/environment.ts',
-          with: 'src/environments/environment.prod.ts',
-        },
-      ],
+      mode: 'production',
     },
   };
 
